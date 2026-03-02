@@ -8,7 +8,7 @@ use hyper::{Request, Response, StatusCode};
 use hyper_util::rt::TokioIo;
 use lazy_static::lazy_static;
 use parking_lot::RwLock;
-use rss::{Category, Channel, ChannelBuilder, Enclosure, ItemBuilder, Source, TextInput};
+use rss::{Category, Channel, ChannelBuilder, Enclosure, GuidBuilder, ItemBuilder, Source, TextInput};
 use std::collections::HashMap;
 use std::env;
 use std::net::SocketAddr;
@@ -169,12 +169,17 @@ async fn update_rss_channel(username: &str, channel: &mut Channel) {
             .title(result.title)
             .author(result.author)
             .description(description)
-            .link(result.link)
+            .link(result.link.clone())
+            .guid(GuidBuilder::default()
+                .value(result.link)
+                .permalink(true)
+                .build()
+            )
             .source(Source {
                 url: source_url,
                 title: Some(String::from(&result.domain)),
             })
-            .pub_date(result.year)
+            .pub_date(result.year.map(|year| format!("{year}-01-01")))
             .enclosure(enclosure)
             .content(result.abs)
             .build();
